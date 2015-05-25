@@ -92,6 +92,7 @@
     <module>shell</module>
     <module>hive</module>
     <module>tajo</module>
+    <module>phoenix</module>
     <module>zeppelin-web</module>
     <module>zeppelin-server</module>
     <module>zeppelin-distribution</module>
@@ -115,6 +116,7 @@
     <zookeeper.version>3.4.5</zookeeper.version>
     <hive.version>0.12.0</hive.version>
     <tajo.version>0.10.0</tajo.version>
+    <phoenix.version>4.3.1</phoenix.version>
     <derby.version>10.4.2.0</derby.version>
     <parquet.version>1.4.3</parquet.version>
     <jblas.version>1.2.3</jblas.version>
