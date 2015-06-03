@@ -72,7 +72,10 @@ public class PhoenixInterpreter extends Interpreter {
 	 
 	public Connection getJdbcConnection() throws SQLException {
 		final String zookeeperQuorum = getProperty(PHOENIX_ZOOKEEPER_QUORUM);
-	  return DriverManager.getConnection(QueryUtil.getUrl(zookeeperQuorum));
+		final String zookeeperParent = getProperty(PHOENIX_ZOOKEEPER_ZNODE_PARENT);
+		final Properties props = new Properties();
+		props.put(PHOENIX_ZOOKEEPER_ZNODE_PARENT,zookeeperParent);
+	  return DriverManager.getConnection(QueryUtil.getUrl(zookeeperQuorum),props);
 	}
 
 	@Override
