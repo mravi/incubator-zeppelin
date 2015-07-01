@@ -15,16 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package org.apache.zeppelin.phoenix;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.List;
-import java.util.Properties;
+
+import com.google.common.collect.Lists;
 
 import org.apache.phoenix.schema.types.PDataType;
 import org.apache.phoenix.util.ColumnInfo;
@@ -38,15 +33,24 @@ import org.apache.zeppelin.scheduler.Scheduler;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.google.common.collect.Lists;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * Phoenix interpreter for Zeppelin. 
  *
  */
 public class PhoenixInterpreter extends Interpreter {
-	private Logger logger = LoggerFactory.getLogger(PhoenixInterpreter.class);
-	
+
+  private Logger logger = LoggerFactory.getLogger(PhoenixInterpreter.class);
+
   public static final String PHOENIX_ZOOKEEPER_QUORUM  = "zookeeper.quorum.uri";
   public static final String PHOENIX_ZOOKEEPER_ZNODE_PARENT  = "zookeeper.znode.parent";
   public static final String PHOENIX_DRIVER_NAME = "org.apache.phoenix.jdbc.PhoenixDriver";
@@ -54,50 +58,49 @@ public class PhoenixInterpreter extends Interpreter {
   private Exception exceptionOnConnect;
   private Connection connection;
   private Statement statement;
-	
+
   static {
-	  Interpreter.register(
-	    "phoenix",
-	    "phoenix",
-	    PhoenixInterpreter.class.getName(),
-	    new InterpreterPropertyBuilder()
-	     	.add(PHOENIX_ZOOKEEPER_QUORUM, "jdbc:phoenix:localhost", "default connect url.")
-	      .add(PHOENIX_ZOOKEEPER_ZNODE_PARENT, "/hbase", "default znode parent.")
-	      .build());
-	}
+    Interpreter.register(
+        "phoenix",
+        "phoenix",
+        PhoenixInterpreter.class.getName(),
+        new InterpreterPropertyBuilder()
+          .add(PHOENIX_ZOOKEEPER_QUORUM, "jdbc:phoenix:localhost", "default connect url.")
+          .add(PHOENIX_ZOOKEEPER_ZNODE_PARENT, "/hbase", "default znode parent.")
+          .build());
+  }
   
   public PhoenixInterpreter(Properties property) {
-	  super(property);
-  }  	 
-	 
-	public Connection getJdbcConnection() throws SQLException {
-		final String zookeeperQuorum = getProperty(PHOENIX_ZOOKEEPER_QUORUM);
-		final String zookeeperParent = getProperty(PHOENIX_ZOOKEEPER_ZNODE_PARENT);
-		final Properties props = new Properties();
-		props.put(PHOENIX_ZOOKEEPER_ZNODE_PARENT,zookeeperParent);
-	  return DriverManager.getConnection(QueryUtil.getUrl(zookeeperQuorum),props);
-	}
+    super(property);
+  }
 
-	@Override
-	public void open() {
-	  logger.info("Jdbc open connection called!");
-	  try {
-	    Class.forName(PHOENIX_DRIVER_NAME);
-	  } catch (ClassNotFoundException e) {
-	    logger.error("Can not open connection", e);
-	    exceptionOnConnect = e;
-	    return;
-	  }
-	  try {
-	    connection = getJdbcConnection();
-	    exceptionOnConnect = null;
-	    logger.info("Successfully created connection");
-	  }
-	  catch (SQLException e) {
-	    logger.error("Cannot open connection", e);
-	    exceptionOnConnect = e;
-	  }
-	}
+  public Connection getJdbcConnection() throws SQLException {
+    final String zookeeperQuorum = getProperty(PHOENIX_ZOOKEEPER_QUORUM);
+    final String zookeeperParent = getProperty(PHOENIX_ZOOKEEPER_ZNODE_PARENT); 
+    final Properties props = new Properties(); 
+    props.put(PHOENIX_ZOOKEEPER_ZNODE_PARENT, zookeeperParent);
+    return DriverManager.getConnection(QueryUtil.getUrl(zookeeperQuorum), props);
+  }
+
+  @Override
+  public void open() {
+    logger.info("Jdbc open connection called!");
+    try {
+      Class.forName(PHOENIX_DRIVER_NAME);
+    } catch (ClassNotFoundException e) {
+      logger.error("Can not open connection", e);
+      exceptionOnConnect = e;
+      return;
+    }
+    try {
+      connection = getJdbcConnection();
+      exceptionOnConnect = null;
+      logger.info("Successfully created connection");
+    } catch (SQLException e) {
+      logger.error("Cannot open connection", e);
+      exceptionOnConnect = e;
+    }
+  }
 
   @Override
   public void close() {
@@ -105,11 +108,9 @@ public class PhoenixInterpreter extends Interpreter {
       if (connection != null) {
         connection.close();
       }
-    }
-    catch (SQLException e) {
+    } catch (SQLException e) {
       logger.error("Cannot close connection", e);
-    }
-    finally {
+    } finally {
       connection = null;
       exceptionOnConnect = null;
     }
@@ -135,33 +136,32 @@ public class PhoenixInterpreter extends Interpreter {
           } else {
             response.append("\t" + columnName);
           }
-          ColumnInfo cInfo = new ColumnInfo(columnName, sqlType);
-          columnMetadata.add(cInfo);
+          ColumnInfo column = new ColumnInfo(columnName, sqlType);
+          columnMetadata.add(column);
         }
         response.append("\n");
         while (res.next()) {
           for (int i = 1; i < columnCount + 1; i++) {
-        	String value = res.getString(i);
-        	ColumnInfo cinfo = columnMetadata.get(i - 1);
-        	Object columnValue = PDataType.fromTypeId(cinfo.getSqlType()).toObject(value);
+            String value = res.getString(i);
+            ColumnInfo cinfo = columnMetadata.get(i - 1);
+            Object columnValue = PDataType.fromTypeId(cinfo.getSqlType()).toObject(value);
             response.append(columnValue.toString() + "\t");
           }
           response.append("\n");
         }
-      }
-      finally {
+      } finally {
         try {
           res.close();
           statement.close();
-        }
-        finally {
+        } finally {
           statement = null;
         }
       }
-      InterpreterResult interpreterResult = new InterpreterResult(Code.SUCCESS, response.toString());
+      
+      InterpreterResult interpreterResult = new InterpreterResult(Code.SUCCESS, 
+          response.toString());
       return interpreterResult;
-    }
-    catch (SQLException ex) {
+    } catch (SQLException ex) {
       logger.error("Can not run " + sql, ex);
       return new InterpreterResult(Code.ERROR, ex.getMessage());
     }

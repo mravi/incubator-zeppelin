@@ -29,7 +29,7 @@
   <name>Zeppelin: Phoenix interpreter</name>
   
   <properties>
-    <phoenix.version>4.3.1</phoenix.version>
+    <phoenix.version>4.4.0-HBase-0.98</phoenix.version>
   </properties> 
   
   <dependencies>
@@ -54,6 +54,12 @@
       <groupId>org.apache.phoenix</groupId>
       <artifactId>phoenix-core</artifactId>
       <version>${phoenix.version}</version>
+      <exclusions>
+       <exclusion>
+        <groupId>org.apache.hadoop</groupId>
+	    <artifactId>hadoop-mapreduce-client-core</artifactId>
+       </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
